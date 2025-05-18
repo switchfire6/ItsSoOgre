@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>It's So Ogre - Enhanced Edition</title>
+    <style>
+        :root {
+            --primary-bg: #2A3C4D;       /* MODIFIED: Dark Slate Blue from image for body */
+            --secondary-bg: #1C2B4A;     /* Darker Blue for game container (kept from previous dark theme) */
+            --accent-color: #29B6F6;     /* Light Blue for action button, borders */
+            --accent-hover: #039BE5;     /* Darker shade of accent */
+            --text-color: #E0E0E0;       /* Light Gray for general text */
+            --danger-color: #e74c3c;     /* Alizarin (Red for game over text) */
+            --warning-color: #FFA726;    /* Orange (Pause button, longest time text) */
+            --warning-hover: #FB8C00;    /* Darker Orange for hover */
+            --player-color: #FFCA28;     /* Amber (Reset button) */
+            --player-hover: #FFB300;     /* Darker Amber for hover */
+            --ogre-color: #c0392b;       /* Pomegranate (Ogre aura - unchanged) */
+            --shield-color: #f1c40f;     /* Sun Flower (Shield status text & aura - unchanged) */
+            --canvas-bg: #E6D8AD;        /* Light Tan/Beige - Sand Color (unchanged) */
+            --canvas-grid: #C8B88A;      /* Darker Tan for grid - Sand Grid (unchanged) */
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* --title-color: #64FFDA;      This variable is no longer directly used for h1 if gradient works */
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow-x: hidden; /* Prevent horizontal scroll on html */
+        }
+
+        body {
+            font-family: var(--font-family);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0; 
+            padding: 10px 0; 
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden; 
+            overflow-y: auto; 
+        }
+
+        h1.game-title {
+            text-align: center;
+            font-size: 3em;
+            margin-top: 0; 
+            margin-bottom: 15px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); /* MODIFIED: Added text shadow */
+            max-width: 100%; 
+            /* MODIFIED: Gradient text effect */
+            background-image: linear-gradient(to right, #30B8B9, #2F80D4, #94A28A);
+            -webkit-background-clip: text;
+            -moz-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        #gameContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 3px solid var(--accent-color);
+            padding: 15px;
+            background-color: var(--secondary-bg);
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            max-width: calc(100% - 20px); 
+        }
+
+        canvas {
+            border: 2px solid var(--accent-color);
+            background-color: var(--canvas-bg); 
+            border-radius: 5px;
+            max-width: 100%; 
+            height: auto;   
+        }
+
+        #uiControls {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        #statsDisplay {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            background-color: rgba(255, 255, 255, 0.08); 
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        #levelDisplay, #timeDisplay {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        #longestTimeSurvivedDisplay {
+            font-size: 1.1em;
+            color: var(--warning-color); 
+            margin-bottom: 10px;
+            text-align: center;
+            width: 100%;
+            font-weight: bold;
+        }
+
+        #messageArea {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            color: var(--text-color);
+            min-height: 50px; 
+            text-align: center;
+            font-weight: 500;
+            padding: 5px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px; 
+            margin-top: 5px;
+            flex-wrap: wrap; 
+            justify-content: center;
+        }
+
+        .game-button { 
+            padding: 12px 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            color: white; 
+            border: none;
+            border-radius: 5px;
+            min-width: 180px;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .game-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .game-button:active {
+            transform: translateY(0px);
+        }
+
+        #actionButton {
+            background-color: var(--accent-color);
+        }
+        #actionButton:hover {
+            background-color: var(--accent-hover);
+        }
+
+        #resetGameButton {
+            background-color: var(--player-color); 
+        }
+        #resetGameButton:hover {
+            background-color: var(--player-hover); 
+        }
+        
+        #pauseButton {
+            background-color: var(--warning-color);
+        }
+        #pauseButton:hover {
+            background-color: var(--warning-hover); 
+        }
+
+        #powerUpStatus {
+            font-size: 1em;
+            color: var(--shield-color); 
+            margin-bottom: 10px;
+            text-align: center;
+            min-height: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1 class="game-title">It's So Ogre</h1>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="uiControls">
+            <div id="statsDisplay">
+                <div id="levelDisplay">Level: 1</div>
+                <div id="timeDisplay">Time: 0s</div>
+            </div>
+            <div id="longestTimeSurvivedDisplay">Longest: 0m 0s</div>
+            <div id="powerUpStatus"></div>
+            <div id="messageArea">Welcome to "It's So Ogre"!</div>
+            <div class="button-group">
+                <button id="actionButton" class="game-button">Start Level 1</button>
+                <button id="pauseButton" class="game-button" style="display: none;">Pause</button>
+            </div>
+            <button id="resetGameButton" class="game-button" style="display: none; margin-top: 10px;">Start From Beginning</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Canvas & Context ---
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 600;
+            canvas.height = 400;
+
+            // --- DOM Elements ---
+            const levelDisplay = document.getElementById('levelDisplay');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const messageArea = document.getElementById('messageArea');
+            const actionButton = document.getElementById('actionButton');
+            const resetGameButton = document.getElementById('resetGameButton');
+            const longestTimeSurvivedDisplay = document.getElementById('longestTimeSurvivedDisplay');
+            const pauseButton = document.getElementById('pauseButton');
+            const powerUpStatusDisplay = document.getElementById('powerUpStatus');
+
+            // --- Game Configuration ---
+            const PLAYER_EMOJI = '🏃';
+            const OGRE_EMOJI = '👹';
+            const SHIELD_POWER_UP_EMOJI = '🛡️';
+            const PLAYER_SIZE = 20; 
+            const OGRE_SIZE = 20;   
+            const POWER_UP_SIZE = 15; 
+            const PLAYER_SPEED = 1.7; 
+            const EMOJI_FONT_SIZE = 30; 
+            
+            const PLAYER_AURA_COLOR = 'rgba(52, 152, 219, 0.7)'; 
+            const OGRE_AURA_COLOR = 'rgba(192, 57, 43, 0.7)';   
+            const SHIELD_AURA_COLOR = 'rgba(241, 196, 15, 0.8)'; 
+            const POWER_UP_AURA_COLOR = 'rgba(241, 196, 15, 0.5)';
+
+            const PLAYER_TRAIL_LENGTH = 5;
+            const PLAYER_TRAIL_OPACITY_STEP = 0.15;
+            
+            const OGRE_MAX_PERTURBATION = Math.PI / 2.8; 
+            const OGRE_SPEED_CHANGE_INTERVAL_MIN = 1000; 
+            const OGRE_SPEED_CHANGE_INTERVAL_MAX = 2500; 
+            const OGRE_SPEED_MULTIPLIER_MIN = 0.4; 
+            const OGRE_SPEED_MULTIPLIER_MAX = 1.6; 
+
+            const OGRE_BASE_MIN_SPEED = 0.4; 
+            const OGRE_BASE_MAX_SPEED = 0.8; 
+
+            const MIN_SPAWN_DISTANCE_FROM_PLAYER = 100; // MODIFIED: Min distance for ogre spawn from player
+
+
+            // --- Game State Variables ---
+            let gameState = 'INITIAL'; 
+            let currentLevelIndex = 0;
+            let timeLeft = 0;
+            let gameTimerInterval;
+            let player;
+            let ogres = [];
+            let keysPressed = {};
+            
+            let timeUntilNextOgreSpawn = 0;
+            let ogreSpawnEvents = []; 
+            let lastTimestamp = 0;
+            let animationFrameId;
+
+            let currentPlaythroughTotalSurvival = 0;
+            let longestPlaythroughTotalSurvival = 0;
+            const LOCAL_STORAGE_KEY_LONGEST_TIME = 'iso_longestTimeSurvived_v2';
+
+            let shieldPowerUp = null; 
+            const SHIELD_DURATION = 7000; 
+            let timeUntilNextPowerUpSpawn = 0; 
+            let shieldActive = false;
+            let shieldDurationTimeout;
+
+            const playerTrail = [];
+
+            // --- Dynamic Level Configuration Function ---
+            function getLevelConfig(levelIndex) {
+                // MODIFIED: Ogre count increased
+                const baseNumOgres = 4;
+                const numOgresIncrementPerLevel = 2;
+                let numOgres = baseNumOgres + (numOgresIncrementPerLevel * levelIndex);
+
+                const ogreMinSpeed = OGRE_BASE_MIN_SPEED;
+                const ogreMaxSpeed = OGRE_BASE_MAX_SPEED;
+
+                const baseSpawnDelay = 2800; 
+                const spawnDelayDecrementPerLevel = 90; 
+                const minSpawnDelay = 400; 
+                let spawnDelay = baseSpawnDelay - (spawnDelayDecrementPerLevel * levelIndex);
+                spawnDelay = Math.max(minSpawnDelay, spawnDelay);
+                
+                const powerUpSpawnChanceInterval = 5000 + Math.max(0, 3000 - levelIndex * 200); 
+
+                let timeLimitSeconds;
+                if (levelIndex === 0) { 
+                    timeLimitSeconds = 15; 
+                } else if (levelIndex === 1) { 
+                    timeLimitSeconds = 20; 
+                } else { 
+                    timeLimitSeconds = 30; 
+                }
+
+                return {
+                    timeLimitSeconds,
+                    numOgres,
+                    ogreMinSpeed, 
+                    ogreMaxSpeed, 
+                    spawnDelay,
+                    powerUpSpawnChanceInterval
+                };
+            }
+
+            // --- Helper Functions ---
+            function formatTime(totalSeconds) {
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                return `${minutes}m ${seconds}s`;
+            }
+
+            function updateLongestTimeDisplay() {
+                longestTimeSurvivedDisplay.textContent = `Longest: ${formatTime(longestPlaythroughTotalSurvival)}`;
+            }
+
+            function getRandomPositionOffCanvas(margin, playerPos) {
+                const SAFE_EDGE_DISTANCE = 120; 
+                let potentialEdges = [0, 1, 2, 3]; // 0: top, 1: right, 2: bottom, 3: left
+
+                if (playerPos) {
+                    let unsafeEdges = [];
+                    if (playerPos.y < SAFE_EDGE_DISTANCE) unsafeEdges.push(0); 
+                    if (playerPos.x > canvas.width - SAFE_EDGE_DISTANCE) unsafeEdges.push(1); 
+                    if (playerPos.y > canvas.height - SAFE_EDGE_DISTANCE) unsafeEdges.push(2); 
+                    if (playerPos.x < SAFE_EDGE_DISTANCE) unsafeEdges.push(3); 
+                    
+                    const safeEdges = potentialEdges.filter(edge => !unsafeEdges.includes(edge));
+                    
+                    if (safeEdges.length > 0) { 
+                        potentialEdges = safeEdges;
+                    }
+                    // If all edges are "unsafe" (player is in the middle of a small area near all edges - unlikely with 120px),
+                    // it will pick from all original potentialEdges, which is fine.
+                }
+                
+                const edge = potentialEdges[Math.floor(Math.random() * potentialEdges.length)];
+                let x, y;
+                switch (edge) {
+                    case 0: x = Math.random() * canvas.width; y = -margin; break; 
+                    case 1: x = canvas.width + margin; y = Math.random() * canvas.height; break; 
+                    case 2: x = Math.random() * canvas.width; y = canvas.height + margin; break; 
+                    case 3: x = -margin; y = Math.random() * canvas.height; break; 
+                }
+                return { x, y };
+            }
+            
+            function getRandomPositionOnCanvas(margin) {
+                return {
+                    x: margin + Math.random() * (canvas.width - 2 * margin),
+                    y: margin + Math.random() * (canvas.height - 2 * margin)
+                };
+            }
+
+
+            // --- Player Object ---
+            function createPlayer() {
+                return {
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    size: PLAYER_SIZE,
+                    emoji: PLAYER_EMOJI,
+                    speed: PLAYER_SPEED 
+                };
+            }
+
+            // --- Ogre Object ---
+            function createOgre(spawnPos) {
+                const config = getLevelConfig(currentLevelIndex); 
+                const speed = config.ogreMinSpeed + Math.random() * (config.ogreMaxSpeed - config.ogreMinSpeed);
+                return { 
+                    x: spawnPos.x, 
+                    y: spawnPos.y, 
+                    size: OGRE_SIZE, 
+                    emoji: OGRE_EMOJI, 
+                    speed, 
+                    originalSpeed: speed, 
+                    perturbationAngle: 0,
+                    timeSinceLastPerturbation: 0,
+                    perturbationInterval: 300 + Math.random() * 500, 
+                    timeSinceSpeedChange: 0, 
+                    currentSpeedChangeInterval: OGRE_SPEED_CHANGE_INTERVAL_MIN + Math.random() * (OGRE_SPEED_CHANGE_INTERVAL_MAX - OGRE_SPEED_CHANGE_INTERVAL_MIN)
+                };
+            }
+            
+            // --- Power-up Management ---
+            function spawnShieldPowerUp() {
+                // MODIFIED: Check level index here as well for robustness, though updatePowerUps should gate it
+                if (currentLevelIndex < 2) return; 
+
+                if (!shieldPowerUp || (!shieldPowerUp.onScreen && !shieldActive)) {
+                    const position = getRandomPositionOnCanvas(POWER_UP_SIZE * 2);
+                    shieldPowerUp = {
+                        x: position.x,
+                        y: position.y,
+                        size: POWER_UP_SIZE,
+                        emoji: SHIELD_POWER_UP_EMOJI,
+                        onScreen: true
+                    };
+                    timeUntilNextPowerUpSpawn = getLevelConfig(currentLevelIndex).powerUpSpawnChanceInterval;
+                }
+            }
+
+            function updatePowerUps(deltaTime) {
+                if (gameState !== 'PLAYING') return;
+
+                // MODIFIED: No shield power-ups on level 1 (index 0) or level 2 (index 1)
+                if (currentLevelIndex < 2) {
+                    if (shieldPowerUp) shieldPowerUp.onScreen = false; // Ensure it's hidden
+                    powerUpStatusDisplay.textContent = ''; // Clear any status
+                    return;
+                }
+
+                const levelConfig = getLevelConfig(currentLevelIndex);
+                if (!shieldPowerUp || (!shieldPowerUp.onScreen && !shieldActive)) {
+                    timeUntilNextPowerUpSpawn -= deltaTime;
+                    if (timeUntilNextPowerUpSpawn <= 0) {
+                         if (Math.random() < 0.6) { 
+                            spawnShieldPowerUp();
+                        } else {
+                             timeUntilNextPowerUpSpawn = levelConfig.powerUpSpawnChanceInterval / 2; 
+                        }
+                    }
+                }
+
+
+                if (shieldPowerUp && shieldPowerUp.onScreen && player) {
+                    const dist = Math.hypot(player.x - shieldPowerUp.x, player.y - shieldPowerUp.y);
+                    if (dist < player.size / 2 + shieldPowerUp.size / 2) {
+                        activateShield();
+                        shieldPowerUp.onScreen = false; 
+                    }
+                }
+            }
+            
+            function activateShield() {
+                if (shieldActive) clearTimeout(shieldDurationTimeout); 
+                shieldActive = true;
+                powerUpStatusDisplay.textContent = `Shield Active: ${SHIELD_DURATION / 1000}s`;
+                let remainingShieldTime = SHIELD_DURATION / 1000;
+
+                if (window.shieldDisplayInterval) clearInterval(window.shieldDisplayInterval);
+
+                window.shieldDisplayInterval = setInterval(() => {
+                    remainingShieldTime--;
+                    if (remainingShieldTime > 0 && shieldActive) { 
+                        powerUpStatusDisplay.textContent = `Shield Active: ${remainingShieldTime}s`;
+                    } else {
+                        clearInterval(window.shieldDisplayInterval); 
+                        if (remainingShieldTime <= 0 && shieldActive) { 
+                           deactivateShield();
+                        }
+                    }
+                }, 1000);
+                
+                shieldDurationTimeout = setTimeout(deactivateShield, SHIELD_DURATION);
+            }
+
+            function deactivateShield() {
+                shieldActive = false;
+                if(window.shieldDisplayInterval) clearInterval(window.shieldDisplayInterval);
+                if(shieldDurationTimeout) clearTimeout(shieldDurationTimeout); 
+                powerUpStatusDisplay.textContent = '';
+                if (shieldPowerUp) shieldPowerUp.active = false; 
+                // Only reset spawn timer if shields are generally allowed for the level
+                if (currentLevelIndex >= 2) {
+                    timeUntilNextPowerUpSpawn = getLevelConfig(currentLevelIndex).powerUpSpawnChanceInterval / 2;
+                }
+            }
+
+
+            // --- Input Handling ---
+            document.addEventListener('keydown', (e) => { keysPressed[e.key.toLowerCase()] = true; });
+            document.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
+
+            function handlePlayerMovement() {
+                if (!player || gameState !== 'PLAYING') return;
+                let dx = 0, dy = 0;
+                if (keysPressed['arrowleft'] || keysPressed['a']) dx -= 1;
+                if (keysPressed['arrowright'] || keysPressed['d']) dx += 1;
+                if (keysPressed['arrowup'] || keysPressed['w']) dy -= 1;
+                if (keysPressed['arrowdown'] || keysPressed['s']) dy += 1;
+                
+                if (dx !== 0 && dy !== 0) {
+                    const factor = Math.sqrt(2); 
+                    dx /= factor;
+                    dy /= factor;
+                }
+
+                const newX = player.x + dx * player.speed;
+                const newY = player.y + dy * player.speed;
+
+                player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, newX));
+                player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, newY));
+
+                playerTrail.unshift({ x: player.x, y: player.y });
+                if (playerTrail.length > PLAYER_TRAIL_LENGTH) {
+                    playerTrail.pop();
+                }
+            }
+
+            // --- Game Logic ---
+            function setupLevel(levelIdx) {
+                currentLevelIndex = levelIdx;
+                const levelConfig = getLevelConfig(currentLevelIndex);
+
+                player = createPlayer();
+                playerTrail.length = 0; 
+                ogres = [];
+                ogreSpawnEvents = [];
+                timeLeft = levelConfig.timeLimitSeconds; 
+                timeUntilNextOgreSpawn = levelConfig.spawnDelay / 2; 
+                
+                shieldPowerUp = null; 
+                deactivateShield(); 
+                if (currentLevelIndex >= 2) { // Only set power-up spawn timer if on level 3+
+                    timeUntilNextPowerUpSpawn = levelConfig.powerUpSpawnChanceInterval;
+                } else {
+                    powerUpStatusDisplay.textContent = ''; // Ensure no lingering text
+                }
+
+
+                levelDisplay.textContent = `Level: ${currentLevelIndex + 1}`;
+                timeDisplay.textContent = `Time: ${timeLeft}s`;
+                
+                gameState = 'PLAYING';
+                messageArea.textContent = `Level ${currentLevelIndex + 1} - Survive!`;
+                actionButton.style.display = 'none';
+                resetGameButton.style.display = 'none';
+                pauseButton.style.display = 'inline-block';
+                pauseButton.textContent = 'Pause';
+                
+                if (gameTimerInterval) clearInterval(gameTimerInterval);
+                gameTimerInterval = setInterval(updateTimer, 1000);
+                
+                lastTimestamp = performance.now();
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            function updateTimer() {
+                if (gameState !== 'PLAYING') return;
+                timeLeft--;
+                timeDisplay.textContent = `Time: ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    levelComplete();
+                }
+            }
+            
+            function updateOgreSpawning(deltaTime) {
+                if (gameState !== 'PLAYING') return;
+                const levelConfig = getLevelConfig(currentLevelIndex);
+
+                for (let i = ogreSpawnEvents.length - 1; i >= 0; i--) {
+                    const event = ogreSpawnEvents[i];
+                    event.progress += deltaTime;
+                    if (event.progress >= event.duration) {
+                        ogres.push(createOgre({x: event.x, y: event.y}));
+                        ogreSpawnEvents.splice(i, 1);
+                    }
+                }
+
+                if (ogres.length + ogreSpawnEvents.length < levelConfig.numOgres) {
+                    timeUntilNextOgreSpawn -= deltaTime;
+                    if (timeUntilNextOgreSpawn <= 0) {
+                        // MODIFIED: Safer ogre spawning
+                        let spawnPosition;
+                        let attempts = 0;
+                        const MAX_SPAWN_ATTEMPTS = 10;
+
+                        do {
+                            spawnPosition = getRandomPositionOffCanvas(OGRE_SIZE, player);
+                            if (!player) { // Fallback if player is unexpectedly null
+                                break; 
+                            }
+                            const distToPlayer = Math.hypot(spawnPosition.x - player.x, spawnPosition.y - player.y);
+                            if (distToPlayer > MIN_SPAWN_DISTANCE_FROM_PLAYER) {
+                                break; // Found a suitable spawn position
+                            }
+                            attempts++;
+                        } while (attempts < MAX_SPAWN_ATTEMPTS);
+                        // If MAX_SPAWN_ATTEMPTS is reached, use the last tried position.
+                        // getRandomPositionOffCanvas already tries to pick a "far" edge.
+                        
+                        ogreSpawnEvents.push({
+                            x: spawnPosition.x,
+                            y: spawnPosition.y,
+                            progress: 0,
+                            duration: 500 
+                        });
+                        timeUntilNextOgreSpawn = levelConfig.spawnDelay;
+                    }
+                }
+            }
+
+            function moveOgres(deltaTime) { 
+                if (!player || gameState !== 'PLAYING') return;
+                const levelConfig = getLevelConfig(currentLevelIndex);
+
+                ogres.forEach(ogre => {
+                    ogre.timeSinceSpeedChange += deltaTime;
+                    if (ogre.timeSinceSpeedChange >= ogre.currentSpeedChangeInterval) {
+                        const speedMultiplier = OGRE_SPEED_MULTIPLIER_MIN + Math.random() * (OGRE_SPEED_MULTIPLIER_MAX - OGRE_SPEED_MULTIPLIER_MIN);
+                        ogre.speed = ogre.originalSpeed * speedMultiplier; 
+                        
+                        ogre.speed = Math.max(levelConfig.ogreMinSpeed * 0.3, ogre.speed); 
+                        ogre.speed = Math.min(ogre.speed, levelConfig.ogreMaxSpeed * 1.8); 
+
+                        ogre.timeSinceSpeedChange = 0;
+                        ogre.currentSpeedChangeInterval = OGRE_SPEED_CHANGE_INTERVAL_MIN + Math.random() * (OGRE_SPEED_CHANGE_INTERVAL_MAX - OGRE_SPEED_CHANGE_INTERVAL_MIN);
+                    }
+
+                    ogre.timeSinceLastPerturbation += deltaTime;
+                    if (ogre.timeSinceLastPerturbation > ogre.perturbationInterval) {
+                        ogre.perturbationAngle = (Math.random() - 0.5) * 2 * OGRE_MAX_PERTURBATION;
+                        ogre.timeSinceLastPerturbation = 0;
+                    }
+
+                    const directAngleToPlayer = Math.atan2(player.y - ogre.y, player.x - ogre.x);
+                    const finalAngle = directAngleToPlayer + ogre.perturbationAngle;
+                    
+                    ogre.x += Math.cos(finalAngle) * ogre.speed;
+                    ogre.y += Math.sin(finalAngle) * ogre.speed;
+                });
+            }
+
+            function checkCollisions() {
+                if (!player || shieldActive) return false; 
+
+                for (const ogre of ogres) {
+                    const dist = Math.hypot(player.x - ogre.x, player.y - ogre.y);
+                    if (dist < player.size / 2 + ogre.size / 2) { 
+                        gameOver();
+                        return true; 
+                    }
+                }
+                return false;
+            }
+
+            function levelComplete() {
+                if (gameState !== 'PLAYING') return; 
+                gameState = 'LEVEL_WON';
+                clearInterval(gameTimerInterval);
+                if (shieldActive) deactivateShield();
+
+                const completedLevelConfig = getLevelConfig(currentLevelIndex);
+                currentPlaythroughTotalSurvival += completedLevelConfig.timeLimitSeconds;
+                
+                if (currentPlaythroughTotalSurvival > longestPlaythroughTotalSurvival) {
+                    longestPlaythroughTotalSurvival = currentPlaythroughTotalSurvival;
+                    localStorage.setItem(LOCAL_STORAGE_KEY_LONGEST_TIME, longestPlaythroughTotalSurvival.toString());
+                    updateLongestTimeDisplay();
+                }
+                
+                messageArea.textContent = `Level ${currentLevelIndex + 1} Complete! Ready for Level ${currentLevelIndex + 2}?`;
+                actionButton.textContent = `Start Level ${currentLevelIndex + 2}`;
+                actionButton.onclick = () => {
+                    setupLevel(currentLevelIndex + 1); 
+                };
+                
+                resetGameButton.style.display = 'inline-block';
+                actionButton.style.display = 'inline-block';
+                pauseButton.style.display = 'none';
+            }
+
+            function gameOver() {
+                if (gameState === 'GAME_OVER') return; 
+                gameState = 'GAME_OVER';
+                clearInterval(gameTimerInterval);
+                 if (shieldActive) deactivateShield();
+                
+                const currentLevelConfig = getLevelConfig(currentLevelIndex);
+                const timeSurvivedThisLevel = currentLevelConfig.timeLimitSeconds - timeLeft;
+                const finalScoreThisPlaythrough = currentPlaythroughTotalSurvival + timeSurvivedThisLevel;
+
+                messageArea.innerHTML = `Game Over on Level ${currentLevelIndex + 1}!<br>Survived ${timeSurvivedThisLevel}s. Total: ${formatTime(finalScoreThisPlaythrough)}.`;
+                
+                if (finalScoreThisPlaythrough > longestPlaythroughTotalSurvival) {
+                    longestPlaythroughTotalSurvival = finalScoreThisPlaythrough;
+                    localStorage.setItem(LOCAL_STORAGE_KEY_LONGEST_TIME, longestPlaythroughTotalSurvival.toString());
+                    updateLongestTimeDisplay();
+                }
+
+                actionButton.textContent = `Retry Level ${currentLevelIndex + 1}`;
+                actionButton.onclick = () => {
+                    setupLevel(currentLevelIndex); 
+                }
+                
+                actionButton.style.display = 'inline-block';
+                resetGameButton.style.display = 'inline-block';
+                pauseButton.style.display = 'none';
+            }
+            
+            function togglePause() {
+                if (gameState === 'PLAYING') {
+                    gameState = 'PAUSED';
+                    messageArea.textContent = 'Game Paused. Press Resume to continue.';
+                    pauseButton.textContent = 'Resume';
+                    clearInterval(gameTimerInterval); 
+                    
+                    if (shieldActive) {
+                        clearTimeout(shieldDurationTimeout);
+                        const shieldText = powerUpStatusDisplay.textContent;
+                         if(shieldText && shieldText.includes("Shield Active")){
+                             const match = shieldText.match(/Shield Active: (\d+)s/);
+                             if (match && match[1]) {
+                                 player.shieldRemainingTimeOnPause = parseInt(match[1]) * 1000;
+                             } else { 
+                                 player.shieldRemainingTimeOnPause = SHIELD_DURATION; 
+                             }
+                         }
+                         if(window.shieldDisplayInterval) clearInterval(window.shieldDisplayInterval);
+                    }
+                    
+                } else if (gameState === 'PAUSED') {
+                    gameState = 'PLAYING';
+                    messageArea.textContent = `Level ${currentLevelIndex + 1} - Survive!`;
+                    pauseButton.textContent = 'Pause';
+                    lastTimestamp = performance.now(); 
+                    gameTimerInterval = setInterval(updateTimer, 1000); 
+
+                    if (shieldActive && player.shieldRemainingTimeOnPause > 0) {
+                        let remainingShieldTimeSec = Math.ceil(player.shieldRemainingTimeOnPause / 1000);
+                        powerUpStatusDisplay.textContent = `Shield Active: ${remainingShieldTimeSec}s`;
+                        
+                        if(window.shieldDisplayInterval) clearInterval(window.shieldDisplayInterval); 
+                        window.shieldDisplayInterval = setInterval(() => {
+                            remainingShieldTimeSec--;
+                            if (remainingShieldTimeSec > 0 && shieldActive) {
+                                powerUpStatusDisplay.textContent = `Shield Active: ${remainingShieldTimeSec}s`;
+                            } else {
+                                clearInterval(window.shieldDisplayInterval);
+                                if(remainingShieldTimeSec <=0 && shieldActive) deactivateShield();
+                            }
+                        }, 1000);
+                        shieldDurationTimeout = setTimeout(deactivateShield, player.shieldRemainingTimeOnPause);
+                        player.shieldRemainingTimeOnPause = 0; 
+                    }
+                    animationFrameId = requestAnimationFrame(gameLoop); 
+                }
+            }
+            pauseButton.onclick = togglePause;
+
+
+            // --- Rendering ---
+            function drawEmojiWithAura(emoji, x, y, characterSize, emojiSize, auraColor) {
+                ctx.beginPath();
+                ctx.arc(x, y, characterSize / 2 + 3, 0, Math.PI * 2); 
+                ctx.fillStyle = auraColor;
+                ctx.fill();
+
+                ctx.font = `${emojiSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(emoji, x, y);
+            }
+            
+            let gridOffset = 0;
+            const gridSize = 40;
+            function drawCanvasBackground() {
+                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg').trim();
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--canvas-grid').trim();
+                ctx.lineWidth = 1;
+                ctx.globalAlpha = 0.3; 
+
+                gridOffset = (gridOffset + 0.1) % gridSize; 
+
+                for (let x = -gridOffset; x < canvas.width; x += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                for (let y = -gridOffset; y < canvas.height; y += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+                ctx.globalAlpha = 1.0;
+            }
+            
+            function drawOgreSpawnEvents() {
+                ogreSpawnEvents.forEach(event => {
+                    const radius = (event.progress / event.duration) * OGRE_SIZE * 0.8; 
+                    ctx.beginPath();
+                    ctx.arc(event.x, event.y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(192, 57, 43, 0.2)'; 
+                    ctx.fill();
+                });
+            }
+
+            function render() {
+                drawCanvasBackground();
+                
+                if (gameState === 'PLAYING' || gameState === 'LEVEL_WON' || gameState === 'GAME_OVER' || gameState === 'PAUSED') {
+                    for (let i = 0; i < playerTrail.length; i++) {
+                        const trailPart = playerTrail[i];
+                        let trailAuraColor = PLAYER_AURA_COLOR.replace(/[^,]+(?=\))/, Math.max(0, 0.5 - i*0.1).toString()); 
+                        if (shieldActive) {
+                           trailAuraColor = SHIELD_AURA_COLOR.replace(/[^,]+(?=\))/, Math.max(0, 0.5 - i*0.1).toString());
+                        }
+                        drawEmojiWithAura(player.emoji, trailPart.x, trailPart.y, player.size - (i*3), EMOJI_FONT_SIZE - (i*3), trailAuraColor);
+                    }
+                    
+                    if (player) {
+                        drawEmojiWithAura(player.emoji, player.x, player.y, player.size, EMOJI_FONT_SIZE, shieldActive ? SHIELD_AURA_COLOR : PLAYER_AURA_COLOR);
+                    }
+
+                    drawOgreSpawnEvents();
+                    ogres.forEach(ogre => drawEmojiWithAura(ogre.emoji, ogre.x, ogre.y, ogre.size, EMOJI_FONT_SIZE, OGRE_AURA_COLOR));
+                    
+                    // MODIFIED: Only draw shield power-up if it's on screen and shields are allowed for the level
+                    if (shieldPowerUp && shieldPowerUp.onScreen && currentLevelIndex >=2) {
+                        drawEmojiWithAura(shieldPowerUp.emoji, shieldPowerUp.x, shieldPowerUp.y, shieldPowerUp.size, EMOJI_FONT_SIZE, POWER_UP_AURA_COLOR);
+                    }
+
+                    if (gameState === 'GAME_OVER') {
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.font = "bold 48px " + getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
+                        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim();
+                        ctx.textAlign = "center";
+                        ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
+                    } else if (gameState === 'PAUSED') {
+                         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.font = "bold 48px " + getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
+                        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--warning-color').trim();
+                        ctx.textAlign = "center";
+                        ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2);
+                    }
+
+                } else if (gameState === 'INITIAL') {
+                    ctx.font = "24px " + getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
+                    ctx.fillStyle = '#000000'; 
+
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("Welcome to \"It's So Ogre\"!", canvas.width/2, canvas.height/2 - 60);
+                    ctx.font = "18px " + getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
+                    ctx.fillText("Use Arrow Keys or WASD to Move.", canvas.width/2, canvas.height/2 - 10);
+                    ctx.fillText("Avoid the Ogres (" + OGRE_EMOJI + ") and survive each level.", canvas.width/2, canvas.height/2 + 20);
+                    // MODIFIED: Updated shield instruction
+                    ctx.fillText("Collect Shields (" + SHIELD_POWER_UP_EMOJI + ") from Level 3 onwards!", canvas.width/2, canvas.height/2 + 50);
+                    ctx.font = "20px " + getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
+                    ctx.fillText("Press 'Start Level' to begin.", canvas.width/2, canvas.height/2 + 90);
+                }
+            }
+
+            // --- Game Loop ---
+            function gameLoop(timestamp) {
+                const deltaTime = timestamp - lastTimestamp;
+                lastTimestamp = timestamp;
+
+                if (gameState === 'PLAYING') {
+                    handlePlayerMovement();
+                    updateOgreSpawning(deltaTime);
+                    moveOgres(deltaTime); 
+                    updatePowerUps(deltaTime); 
+                    if (checkCollisions()) {
+                        render(); 
+                        return; 
+                    }
+                }
+                
+                render();
+                
+                if (gameState === 'PLAYING' || gameState === 'PAUSED') { 
+                     animationFrameId = requestAnimationFrame(gameLoop);
+                } else if (gameState === 'GAME_OVER' || gameState === 'LEVEL_WON') {
+                    render(); 
+                }
+            }
+            
+            // --- Initialization ---
+            function initializeGame(fullReset = false) {
+                gameState = 'INITIAL';
+
+                longestPlaythroughTotalSurvival = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY_LONGEST_TIME) || '0');
+                updateLongestTimeDisplay();
+
+                if (fullReset) {
+                    currentLevelIndex = 0;
+                    currentPlaythroughTotalSurvival = 0;
+                }
+                if (shieldActive) deactivateShield(); 
+                shieldPowerUp = null;
+                powerUpStatusDisplay.textContent = '';
+                if (player) player.shieldRemainingTimeOnPause = 0; 
+
+                const initialLevelConfig = getLevelConfig(currentLevelIndex);
+                levelDisplay.textContent = `Level: ${currentLevelIndex + 1}`;
+                timeDisplay.textContent = `Time: ${initialLevelConfig.timeLimitSeconds}s`;
+                
+                messageArea.textContent = 'Welcome to "It\'s So Ogre"! Ready?';
+                actionButton.textContent = `Start Level ${currentLevelIndex + 1}`;
+                actionButton.style.display = 'inline-block';
+                actionButton.onclick = () => setupLevel(currentLevelIndex);
+                
+                resetGameButton.style.display = fullReset ? 'none' : (currentLevelIndex > 0 || currentPlaythroughTotalSurvival > 0) ? 'inline-block' : 'none'; 
+                resetGameButton.onclick = () => initializeGame(true); 
+
+                pauseButton.style.display = 'none';
+
+                if (gameTimerInterval) clearInterval(gameTimerInterval);
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null; 
+                }
+                
+                ogres = [];
+                ogreSpawnEvents = [];
+                player = null; 
+                playerTrail.length = 0;
+                render(); 
+            }
+
+            initializeGame(true);
+        });
+    </script>
+
+</body>
+</html>
