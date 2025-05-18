@@ -8,6 +8,8 @@ I put this together as a fun, single-file HTML, CSS, and JavaScript project. You
 
 ![image](https://github.com/user-attachments/assets/ce68f95c-8b73-457b-8774-c7fc91aaf505)
 
+**Try It Here:** (https://switchfire6.github.io/ItsSoOgre/)
+
 ## Features
 
 *   **Progressive Difficulty:** Each level ups the ante with more ogres and tougher conditions.
