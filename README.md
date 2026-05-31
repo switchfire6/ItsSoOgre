@@ -1,5 +1,7 @@
 # It's So Ogre 👹
 
+> 🧪 _A curious-tinkerer experiment — built for fun and learning, not as professional software. Rough edges are half the charm._
+
 Hi! Welcome to "It's So Ogre," a frantic little browser game where your main goal is simple: **DON'T GET CAUGHT BY THE OGRES!**
 
 I put this together as a fun, single-file HTML, CSS, and JavaScript project. You control a speedy runner (🏃) and have to survive increasingly challenging levels filled with relentless ogres.
